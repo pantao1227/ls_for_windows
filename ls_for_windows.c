@@ -90,6 +90,8 @@ int main(int argc, char * argv[])
     TCHAR root_dir_path_buffer[MAX_PATH];
     TCHAR dir_path_buffer[MAX_PATH];
     TCHAR temp[MAX_PATH];
+    TCHAR temp2[MAX_PATH];
+
     
     dwRet = GetCurrentDirectory(MAX_PATH, root_dir_path_buffer);
     if( dwRet == 0 )
@@ -198,17 +200,34 @@ int main(int argc, char * argv[])
         rows++;
 
     int i,j;
+
+    strcpy(temp, getenv("USERPROFILE"));
+    strcat(temp, "\\AppData\\Local\\Temp\\lstemp.txt");
+
+    FILE *fp;
+    fp = fopen(temp, "w");
+    if(fp==NULL)
+    {
+        printf("can not open temp file.\n");
+        return 1;
+    }
+
     for(i = 0; i < rows; i++)
     {
         for(j = 0; j < cols; j++)
         {
             if(i + j*rows + 1 > all_list.size)
                 break;
-            printf("\033[%dD\033[%dC%s",console_columns, width*j, GetContent(&all_list, i + j * rows));
+            fprintf(fp, "\033[%dD\033[%dC%s",console_columns, width*j, GetContent(&all_list, i + j * rows));
         }
         if( i != rows - 1 )
-            printf("\n");
+            fprintf(fp, "\n");
     }
+    fclose(fp);
+    strcpy(temp2, "cmd /c type ");
+    strcat(temp2, temp);
+    system(temp2);
+    
 
 end:
     StrListClear(&dir_list);
