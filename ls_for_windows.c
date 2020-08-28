@@ -78,11 +78,55 @@ TCHAR * GetContent(struct StrList * p, int n)
 
 int main(int argc, char * argv[])
 {
-    if( (argc > 1) && !strcmp(argv[1], "/?") )
+    int dispHide = 0;
+    char * arg_path = NULL;
+    // if( (argc > 1) && !strcmp(argv[1], "/?") )
+    // {
+    //     printf("Usage: ls [path]\n");
+    //     return 0;
+    // } else if( (argc > 1) && !strcmp(argv[1], "/a") )
+    // {
+    //     dispHide = 1;
+    // } else {
+    //     dispHide = 0;
+    // }
+    if ( argc > 1 )
     {
-        printf("Usage: ls [path]\n");
-        return 0;
+        if ( !strcmp(argv[1], "/?") )
+        {
+            printf("Usage: ls [path]\n");
+            return 0;
+        }
+        else if ( argc == 2)
+        {
+            if ( !strcmp(argv[1], "/a") )
+            {
+                dispHide = 1;
+            }
+        }
+        else if ( argc == 3 ) {
+            if ( !strcmp(argv[1], "/a") )
+            {
+                dispHide = 1;
+                arg_path = argv[2];
+            }
+            else if ( !strcmp(argv[2], "/a") )
+            {
+                dispHide = 1;
+                arg_path = argv[1];
+            }
+            else
+            {
+                printf("Arguments Error.\n");
+                return 1;
+            }
+            
+        } else {
+            printf("Too many arguments.\n");
+            return 1;
+        }
     }
+
     struct StrList dir_list = {0, NULL, NULL};
     struct StrList file_list = {0, NULL, NULL};
 
@@ -105,12 +149,12 @@ int main(int argc, char * argv[])
         return;
     }
 
-    if(argc > 1)
+    if(arg_path != NULL)
     {
-        if( !SetCurrentDirectory(argv[1]) )
+        if( !SetCurrentDirectory(arg_path) )
         {
             printf("Set directory failed (%d)\n", GetLastError());
-            return;
+            return 1;
         }
 
         dwRet = GetCurrentDirectory(MAX_PATH, dir_path_buffer);
@@ -144,21 +188,47 @@ int main(int argc, char * argv[])
     while(FindNextFile(h, &wFd))
     {
         if(strcmp(wFd.cFileName, ".") && strcmp(wFd.cFileName, ".."))
-            if(wFd.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+            if(wFd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
-                strcpy(temp, "\033[1;36m");
-                strcat(temp, wFd.cFileName);
-                strcat(temp, "\033[0m");
-                StrListAppend(&dir_list, temp);
-                if(strlen(wFd.cFileName) > maxL)
-                    maxL = strlen(wFd.cFileName);
-            } else {
-                strcpy(temp, "\033[1;92m");
-                strcat(temp, wFd.cFileName);
-                strcat(temp, "\033[0m");
-                StrListAppend(&file_list, temp);
-                if(strlen(wFd.cFileName) > maxL)
-                    maxL = strlen(wFd.cFileName);
+                if(wFd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+                {
+                    if( !dispHide ) continue;
+                    strcpy(temp, "\033[100m");
+                    strcat(temp, wFd.cFileName);
+                    strcat(temp, "\033[0m");
+                    StrListAppend(&dir_list, temp);
+                    if(strlen(wFd.cFileName) > maxL)
+                        maxL = strlen(wFd.cFileName);
+                }
+                else
+                {
+                    strcpy(temp, "\033[94m");
+                    strcat(temp, wFd.cFileName);
+                    strcat(temp, "\033[0m");
+                    StrListAppend(&dir_list, temp);
+                    if(strlen(wFd.cFileName) > maxL)
+                        maxL = strlen(wFd.cFileName);
+                }
+            }
+            else
+            {
+                if( wFd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN )
+                {
+                    if( !dispHide ) continue;
+                    strcpy(temp, "\033[90m");
+                    strcat(temp, wFd.cFileName);
+                    strcat(temp, "\033[0m");
+                    StrListAppend(&file_list, temp);
+                    if(strlen(wFd.cFileName) > maxL)
+                        maxL = strlen(wFd.cFileName);
+                } else {
+                    strcpy(temp, "\033[92m");
+                    strcat(temp, wFd.cFileName);
+                    strcat(temp, "\033[0m");
+                    StrListAppend(&file_list, temp);
+                    if(strlen(wFd.cFileName) > maxL)
+                        maxL = strlen(wFd.cFileName);
+                }
             }
 
     }
