@@ -80,16 +80,7 @@ int main(int argc, char * argv[])
 {
     int dispHide = 0;
     char * arg_path = NULL;
-    // if( (argc > 1) && !strcmp(argv[1], "/?") )
-    // {
-    //     printf("Usage: ls [path]\n");
-    //     return 0;
-    // } else if( (argc > 1) && !strcmp(argv[1], "/a") )
-    // {
-    //     dispHide = 1;
-    // } else {
-    //     dispHide = 0;
-    // }
+
     if ( argc > 1 )
     {
         if ( !strcmp(argv[1], "/?") )
@@ -102,6 +93,10 @@ int main(int argc, char * argv[])
             if ( !strcmp(argv[1], "/a") )
             {
                 dispHide = 1;
+            }
+            else
+            {
+                arg_path = argv[1];
             }
         }
         else if ( argc == 3 ) {
@@ -202,7 +197,7 @@ int main(int argc, char * argv[])
                 }
                 else
                 {
-                    strcpy(temp, "\033[94m");
+                    strcpy(temp, "\033[96m");
                     strcat(temp, wFd.cFileName);
                     strcat(temp, "\033[0m");
                     StrListAppend(&dir_list, temp);
